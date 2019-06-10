@@ -3,18 +3,20 @@
 
 %global pecl_name yaml
 %global ini_name  40-%{pecl_name}.ini
+%global php       php73
 
-Name:           php-pecl-yaml
+Name:           %{php}-pecl-yaml
 Version:        2.0.4
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Support for YAML 1.1 serialization using the LibYAML library
 
 License:        MIT
-URL:            http://pecl.php.net/package/yaml
-Source0:        http://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
+URL:            https://pecl.php.net/package/yaml
+Source0:        https://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 
-BuildRequires:  php-devel >= 7
-BuildRequires:  php-pear
+BuildRequires:  %{php}-devel
+# build require pear1's dependencies to avoid mismatched php stacks
+BuildRequires:  pear1 %{php}-cli %{php}-common %{php}-xml
 BuildRequires:  libyaml-devel
 
 Requires:       php(zend-abi) = %{php_zend_api}
@@ -24,6 +26,11 @@ Provides:       php-%{pecl_name} = %{version}
 Provides:       php-%{pecl_name}%{?_isa} = %{version}
 Provides:       php-pecl(%{pecl_name}) = %{version}
 Provides:       php-pecl(%{pecl_name})%{?_isa} = %{version}
+
+# safe replacement
+Provides:       php-pecl-%{pecl_name} = %{version}-%{release}
+Provides:       php-pecl-%{pecl_name}%{?_isa} = %{version}-%{release}
+Conflicts:      php-pecl-%{pecl_name} < %{version}-%{release}
 
 
 %description
@@ -84,7 +91,7 @@ EOF
 
 # Package info
 mkdir -p %{buildroot}%{pecl_xmldir}
-install -p -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
+install -p -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{pecl_name}.xml
 
 # Documentation
 for i in $(grep 'role="doc"' package.xml | sed -e 's/^.*name="//;s/".*$//')
@@ -92,15 +99,36 @@ do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
 
 
+%triggerin -- pear1
+if [ -x %{__pecl} ]; then
+    %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+fi
+
+
+%posttrans
+if [ -x %{__pecl} ]; then
+    %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+fi
+
+
+%postun
+if [ $1 -eq 0 -a -x %{__pecl} ]; then
+    %{pecl_uninstall} %{pecl_name} >/dev/null || :
+fi
+
+
 %files
 %license %{pecl_name}-%{version}%{?prever}/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
 %config(noreplace) %{php_inidir}/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
-%{pecl_xmldir}/%{name}.xml
+%{pecl_xmldir}/%{pecl_name}.xml
 
 
 %changelog
+* Mon Jun 10 2019 Carl George <carl@george.computer> - 2.0.4-3
+- Port from Fedora to IUS
+
 * Sat Feb 02 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.0.4-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 

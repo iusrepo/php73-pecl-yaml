@@ -6,8 +6,8 @@
 %global php       php73
 
 Name:           %{php}-pecl-yaml
-Version:        2.0.4
-Release:        3%{?dist}
+Version:        2.1.0
+Release:        1%{?dist}
 Summary:        Support for YAML 1.1 serialization using the LibYAML library
 
 License:        MIT
@@ -126,6 +126,9 @@ fi
 
 
 %changelog
+* Wed Jul 29 2020 Carl George <carl@george.computer> - 2.1.0-1
+- Latest upstream
+
 * Mon Jun 10 2019 Carl George <carl@george.computer> - 2.0.4-3
 - Port from Fedora to IUS
 
